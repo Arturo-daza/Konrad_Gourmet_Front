@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.services.categoria_service import CategoriaService
+from app.services.pedido_service import PedidoService
 from app.services.plato_service import PlatoService
 from app.services.producto_service import ProductoService
 from app.services.unidad_medida_service import UnidadMedidaService
@@ -160,3 +161,18 @@ def eliminar_plato(id_plato):
     PlatoService.eliminar_plato(id_plato)
     flash("Plato eliminado exitosamente.", "success")
     return redirect(url_for("chef.listar_platos"))
+
+@chef_bp.route("/pedidos/<int:id_pedido>/estado", methods=["POST"])
+def actualizar_estado_pedido(id_pedido):
+    """
+    Actualiza el estado de un pedido.
+    """
+    nuevo_estado = request.form["estado"]
+    try:
+        PedidoService.actualizar_estado(id_pedido, {"estado": nuevo_estado})
+        flash("Estado del pedido actualizado exitosamente.", "success")
+    except Exception as e:
+        flash(f"Error al actualizar el estado del pedido: {str(e)}", "error")
+
+    return redirect(url_for("mesero.listar_pedidos"))
+
