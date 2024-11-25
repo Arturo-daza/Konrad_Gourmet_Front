@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="p-6 bg-white shadow-md rounded-lg">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Editar Plato</h1>
+    <form method="POST">
+        <!-- Nombre -->
+        <div class="mb-4">
+            <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
+            <input type="text" name="nombre" id="nombre" value="{{ plato['nombre'] }}"
+                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+        </div>
+
+        <!-- Precio -->
+        <div class="mb-4">
+            <label for="precio" class="block text-sm font-medium text-gray-700">Precio de Venta</label>
+            <input type="number" name="precio" id="precio" value="{{ plato['precio'] }}" step="0.01"
+                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+        </div>
+
+        <!-- Ingredientes -->
+        <div class="mb-4" id="ingredientes-container">
+            <label class="block text-sm font-medium text-gray-700">Ingredientes</label>
+            <button type="button" onclick="agregarIngrediente()"
+                class="mt-2 mb-4 bg-indigo-600 text-white px-3 py-1 rounded-md">Agregar Ingrediente</button>
+
+            {% for ingrediente in plato['ingredientes'] %}
+            <div class="ingrediente flex items-center space-x-4 mb-2">
+                <!-- Categoría -->
+                <select name="id_categoria[]" class="categoria border border-gray-300 rounded-md shadow-sm"
+                    onchange="cargarProductos(this)" required>
+                    <option value="">Seleccionar Categoría</option>
+                    {% for categoria in categorias %}
+                    <option value="{{ categoria['id_categoria'] }}" {% if
+                        categoria['id_categoria']==ingrediente['id_categoria'] %}selected{% endif %}>
+                        {{ categoria['nombre'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <!-- Producto -->
+                <select name="id_producto[]" class="producto border border-gray-300 rounded-md shadow-sm" required>
+                    <option value="">Seleccionar Producto</option>
+                    {% for producto in productos[ingrediente['id_categoria']] %}
+                    <option value="{{ producto['id_producto'] }}" {% if
+                        producto['id_producto']==ingrediente['id_producto'] %}selected{% endif %}>
+                        {{ producto['nombre'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <!-- Cantidad -->
+                <input type="number" name="cantidad[]" step="0.01" value="{{ ingrediente['cantidad'] }}"
+                    class="border border-gray-300 rounded-md shadow-sm" required>
+
+                <!-- Unidad de medida -->
+                <select name="id_unidad_medida[]" class="unidad-medida border border-gray-300 rounded-md shadow-sm"
+                    required>
+                    {% for unidad in unidades %}
+                    <option value="{{ unidad['id_unidad'] }}" {% if unidad['id_unidad']==ingrediente['id_unidad_medida']
+                        %}selected{% endif %}>
+                        {{ unidad['nombre'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <!-- Botón eliminar -->
+                <button type="button" onclick="this.parentNode.remove()"
+                    class="bg-red-600 text-white px-3 py-1 rounded-md">Eliminar</button>
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <!-- Botones -->
+        <div class="flex justify-end space-x-4">
+            <a href="/chef/platos" class="py-2 px-4 bg-gray-400 text-white rounded hover:bg-gray-500">Cancelar</a>
+            <button type="submit"
+                class="py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700">Guardar</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const productosPorCategoria = {{ productos | safe }};
+
+    function cargarProductos(select) {
+        const categoriaId = select.value;
+        const productoSelect = select.nextElementSibling;
+
+        productoSelect.innerHTML = '<option value="">Seleccionar Producto</option>';
+        if (productosPorCategoria[categoriaId]) {
+            productosPorCategoria[categoriaId].forEach(producto => {
+                const option = document.createElement("option");
+                option.value = producto.id_producto;
+                option.textContent = producto.nombre;
+                productoSelect.appendChild(option);
+            });
+        }
+    }
+
+    function agregarIngrediente() {
+        const container = document.getElementById("ingredientes-container");
+        const template = `
+            <div class="ingrediente flex items-center space-x-4 mb-2">
+                <!-- Categoría -->
+                <select
+                    name="id_categoria[]"
+                    class="categoria border border-gray-300 rounded-md shadow-sm"
+                    onchange="cargarProductos(this)"
+                    required
+                >
+                    <option value="">Seleccionar Categoría</option>
+                    {% for categoria in categorias %}
+                    <option value="{{ categoria['id_categoria'] }}">{{ categoria['nombre'] }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- Producto -->
+                <select
+                    name="id_producto[]"
+                    class="producto border border-gray-300 rounded-md shadow-sm"
+                    required
+                >
+                    <option value="">Seleccionar Producto</option>
+                </select>
+
+                <!-- Cantidad -->
+                <input
+                    type="number"
+                    name="cantidad[]"
+                    step="0.01"
+                    placeholder="Cantidad"
+                    class="border border-gray-300 rounded-md shadow-sm"
+                    required
+                >
+
+                <!-- Unidad de medida -->
+                <select
+                    name="id_unidad_medida[]"
+                    class="unidad-medida border border-gray-300 rounded-md shadow-sm"
+                    required
+                >
+                    {% for unidad in unidades %}
+                    <option value="{{ unidad['id_unidad'] }}">{{ unidad['nombre'] }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- Botón eliminar -->
+                <button type="button" onclick="this.parentNode.remove()" class="bg-red-600 text-white px-3 py-1 rounded-md">Eliminar</button>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', template);
+    }
+</script>
+{% endblock %}

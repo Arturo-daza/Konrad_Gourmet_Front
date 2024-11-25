@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="p-6 bg-white shadow-md rounded-lg">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Platos Registrados</h1>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for plato in platos %}
+        <div class="bg-gray-100 shadow-md rounded-lg p-4">
+            <h2 class="text-lg font-bold text-gray-800">{{ plato['nombre'] }}</h2>
+            <!-- <p class="text-sm text-gray-600 mb-2">{{ plato['descripcion'] }}</p> -->
+            <p class="text-sm text-gray-700 font-bold">Precio: ${{ plato['precio'] | round(2) }}</p>
+            
+            <div class="mt-4 flex justify-between">
+                <!-- Botón para abrir el modal de detalles -->
+                <button
+                    onclick="abrirModal('{{ plato['id_plato'] }}')"
+                    class="text-white bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+                >
+                    Ver Detalles
+                </button>
+
+                <!-- Botón para editar -->
+                <a href="/chef/platos/{{ plato['id_plato'] }}/editar" class="text-white bg-green-600 px-4 py-2 rounded hover:bg-green-700">
+                    Editar
+                </a>
+
+                <!-- Botón para eliminar -->
+                <button
+                    onclick="confirmarEliminar('{{ plato['id_plato'] }}')"
+                    class="text-white bg-red-600 px-4 py-2 rounded hover:bg-red-700"
+                >
+                    Eliminar
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="modalDetalles" class="fixed inset-0 hidden bg-gray-800 bg-opacity-50 flex justify-center items-center">
+    <div class="bg-white rounded-lg shadow-md w-3/4 max-w-2xl p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 id="modalTitulo" class="text-lg font-bold text-gray-800">Detalles del Plato</h2>
+            <button onclick="cerrarModal()" class="text-gray-500 hover:text-gray-800">
+                &times;
+            </button>
+        </div>
+        <div id="modalContenido" class="space-y-2">
+            <!-- Aquí se inyectará la información del plato -->
+        </div>
+        <div class="flex justify-between mt-4">
+            <button onclick="cerrarModal()" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">
+                Cerrar
+            </button>
+            <div class="flex space-x-2">
+                <a id="modalEditar" href="#" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Editar</a>
+                <button id="modalEliminar" onclick="" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById("modalDetalles");
+    const modalTitulo = document.getElementById("modalTitulo");
+    const modalContenido = document.getElementById("modalContenido");
+    const modalEditar = document.getElementById("modalEditar");
+    const modalEliminar = document.getElementById("modalEliminar");
+
+    function abrirModal(id_plato) {
+        const plato = {{ platos | safe }}.find(p => p.id_plato == id_plato);
+        if (plato) {
+            // Título del modal
+            modalTitulo.textContent = plato.nombre;
+
+            // Contenido del modal
+            let ingredientesHTML = plato.ingredientes.map(ingrediente => `
+                <li>
+                    Producto: <strong>${ingrediente.nombre_producto}</strong> (${ingrediente.nombre_categoria}),
+                    Cantidad: ${ingrediente.cantidad} ${ingrediente.nombre_unidad}
+                </li>
+            `).join("");
+
+            modalContenido.innerHTML = `
+                <p><strong>Descripción:</strong> ${plato.descripcion || "Sin descripción"}</p>
+                <p><strong>Precio:</strong> $${plato.precio.toFixed(2)}</p>
+                <h3 class="font-bold mt-4">Ingredientes:</h3>
+                <ul class="list-disc pl-4">${ingredientesHTML}</ul>
+            `;
+
+            // Configurar botones de acción
+            modalEditar.href = `/chef/platos/${id_plato}/editar`;
+            modalEliminar.onclick = () => confirmarEliminar(id_plato);
+
+            // Mostrar el modal
+            modal.classList.remove("hidden");
+        } else {
+            alert("No se encontraron los detalles del plato.");
+        }
+    }
+
+    function cerrarModal() {
+        modal.classList.add("hidden");
+        modalContenido.innerHTML = "";
+    }
+
+    function confirmarEliminar(id_plato) {
+        if (confirm("¿Estás seguro de que deseas eliminar este plato?")) {
+            const token = "{{ session['access_token'] }}"; // Obtener el token de la sesión
+    
+            fetch(`http://localhost:8000/api/platos/${id_plato}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`, // Agregar el token en la cabecera
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Plato eliminado correctamente.");
+                    location.reload();
+                } else {
+                    alert("Error al eliminar el plato.");
+                }
+            })
+            .catch(error => console.error("Error al eliminar el plato:", error));
+        }
+    }
+    
+</script>
+{% endblock %}

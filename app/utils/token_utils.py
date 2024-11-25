@@ -20,6 +20,7 @@ def guardar_en_session(token: str):
         data = decodificar_token(token)
         session["username"] = data.get("username")
         session["rol"] = data.get("rol")
+        session["access_token"] = token
     except jwt.ExpiredSignatureError:
         raise ValueError("El token ha expirado.")
     except jwt.DecodeError:

@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title or "Dashboard" }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="h-screen bg-gray-100 font-sans">
     <div class="flex h-full">
         <!-- Menú lateral -->
         <aside class="w-1/4 bg-white shadow-md h-full flex flex-col">
             <div class="p-6 flex flex-col items-center">
                 <!-- Foto del usuario -->
-                <img src="/static/images/user-placeholder.png" alt="Foto del usuario" class="w-24 h-24 rounded-full mb-4">
+                <img src="/static/images/user-placeholder.png" alt="Foto del usuario"
+                    class="w-24 h-24 rounded-full mb-4">
                 <!-- Nombre del usuario -->
                 <h2 class="text-lg font-bold text-gray-800">{{ session['username'] }}</h2>
                 <!-- Rol del usuario -->
@@ -22,13 +25,14 @@
             <!-- Menú dinámico -->
             <nav class="flex flex-col space-y-2 px-4">
                 <a href="/dashboard" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Dashboard</a>
-                
+
                 {% if session['rol'] == 'Administrador' %}
                 <a href="/admin/users" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Usuarios</a>
                 <a href="/admin/settings" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Configuración</a>
                 <a href="/admin/reports" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Reportes</a>
                 {% elif session['rol'] == 'Jefe de Cocina' %}
-                <a href="/chef/platos" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Gestión de Platos</a>
+                <a href="/chef/platos" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Gestión de
+                    Platos</a>
                 <a href="/chef/pedidos" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Pedidos</a>
                 {% elif session['rol'] == 'Mesero' %}
                 <a href="/mesero/pedidos" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Mis Pedidos</a>
@@ -42,10 +46,24 @@
         </aside>
         <!-- Contenido principal -->
         <main class="w-3/4 bg-gray-100 p-6">
+            <!-- base.html -->
+            {% if get_flashed_messages() %}
+            <div class="fixed top-4 right-4 w-auto z-50">
+                {% for message in get_flashed_messages(with_categories=True) %}
+                <div
+                    class="p-4 mb-2 rounded-lg shadow-lg 
+        {% if message[0] == 'success' %} bg-green-100 text-green-700 {% elif message[0] == 'error' %} bg-red-100 text-red-700 {% else %} bg-gray-100 text-gray-700 {% endif %}">
+                    {{ message[1] }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             {% block content %}
             <!-- Aquí se renderiza la información dinámica -->
             {% endblock %}
         </main>
     </div>
 </body>
+
 </html>
