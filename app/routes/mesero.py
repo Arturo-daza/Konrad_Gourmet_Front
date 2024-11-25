@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from datetime import datetime
+from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash, session
 from app.services.pedido_service import PedidoService
 from app.services.plato_service import PlatoService
 from app.services.producto_service import ProductoService
@@ -10,10 +11,15 @@ def listar_pedidos():
     """
     Lista todos los pedidos con filtros opcionales por fecha, estado e ID.
     """
-    fecha = request.args.get("fecha")
-    estado = request.args.get("estado")
-    mesa = request.args.get("mesa")
-
+    
+    # Obtener la fecha de hoy
+    fecha_hoy = datetime.utcnow().strftime('%Y-%m-%d')
+    
+    # Leer parámetros del request o usar valores predeterminados
+    fecha = request.args.get("fecha", fecha_hoy)  # Fecha por defecto es "hoy"
+    estado = request.args.get("estado")  # Estado puede ser opcional
+    mesa = request.args.get("mesa")  # Mesa puede ser opcional
+    
     pedidos = PedidoService.obtener_pedidos()
     platos = PlatoService.obtener_platos()  # Obtener todos los platos disponibles
 
@@ -37,7 +43,11 @@ def listar_pedidos():
     if mesa:
         pedidos = [pedido for pedido in pedidos if str(pedido["mesa"]) == mesa]
 
-    return render_template("mesero/listar_pedidos.html", pedidos=pedidos)
+    # Ordenar por estado (Pendiente > Preparado > Entregado > Cancelado)
+    orden_estado = {"pendiente": 0, "preparado": 1, "entregado": 2, "cancelado": 3}
+    pedidos.sort(key=lambda p: orden_estado.get(p["estado"], 4))
+
+    return render_template("mesero/listar_pedidos.html", pedidos=pedidos,  fecha_hoy=fecha_hoy)
 
 
 
@@ -58,11 +68,16 @@ def crear_pedido():
         cantidades = request.form.getlist("cantidad[]")
 
         for i in range(len(platos)):
-            detalle = {
-                "id_plato": int(platos[i]),
-                "cantidad": int(cantidades[i])
-            }
-            data["detalles"].append(detalle)
+            id_plato = int(platos[i])
+            cantidad = int(cantidades[i])
+
+            # Validar que la cantidad no exceda el máximo preparable
+            max_preparable = next((p["cantidad_preparable"] for p in platos_preparables if p["id_plato"] == id_plato), 0)
+            if cantidad > max_preparable:
+                flash(f"La cantidad para el plato {id_plato} excede el máximo preparable ({max_preparable}).", "error")
+                return render_template("mesero/crear_pedido.html", platos_preparables=platos_preparables)
+
+            data["detalles"].append({"id_plato": id_plato, "cantidad": cantidad})
 
         try:
             PedidoService.crear_pedido(data)
@@ -72,6 +87,7 @@ def crear_pedido():
             flash(f"Error al crear el pedido: {str(e)}", "error")
 
     return render_template("mesero/crear_pedido.html", platos_preparables=platos_preparables)
+
 
 
 @mesero_bp.route("/pedidos/<int:id_pedido>/editar", methods=["GET", "POST"])
@@ -131,4 +147,6 @@ def actualizar_estado_pedido(id_pedido):
         flash(f"Error al actualizar el estado del pedido: {str(e)}", "error")
 
     return redirect(url_for("mesero.listar_pedidos"))
+
+
 
