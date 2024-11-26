@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="p-6 bg-white shadow-md rounded-lg">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Editar Pedido</h1>
+    <form method="POST">
+        <!-- Mesa -->
+        <div class="mb-4">
+            <label for="mesa" class="block text-sm font-medium text-gray-700">Mesa</label>
+            <input
+                type="number"
+                name="mesa"
+                id="mesa"
+                value="{{ pedido['mesa'] }}"
+                class="border border-gray-300 rounded-md px-3 py-2 w-full"
+                min="1"
+                required
+            >
+        </div>
+
+        <!-- Ingredientes -->
+        <div class="mb-4" id="platos-container">
+            <label class="block text-sm font-medium text-gray-700">Platos</label>
+            <button
+                type="button"
+                onclick="agregarPlato()"
+                class="mt-2 mb-4 bg-indigo-600 text-white px-3 py-1 rounded-md"
+            >
+                Agregar Plato
+            </button>
+
+            {% for detalle in pedido['detalles'] %}
+            <div class="plato flex items-center space-x-4 mb-2">
+                <select
+                    name="id_plato[]"
+                    class="plato-select border border-gray-300 rounded-md shadow-sm"
+                    required
+                >
+                    {% for plato in platos_preparables %}
+                    <option value="{{ plato['id_plato'] }}" {% if plato['id_plato'] == detalle['id_plato'] %}selected{% endif %}>
+                        {{ plato['nombre'] }} (Máx: {{ plato['cantidad_preparable'] }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <input
+                    type="number"
+                    name="cantidad[]"
+                    value="{{ detalle['cantidad'] }}"
+                    placeholder="Cantidad"
+                    class="cantidad border border-gray-300 rounded-md shadow-sm"
+                    required
+                >
+                <button type="button" onclick="this.parentNode.remove()" class="bg-red-600 text-white px-3 py-1 rounded-md">
+                    Eliminar
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Botones -->
+        <div class="flex justify-end space-x-4">
+            <a href="/mesero/pedidos" class="py-2 px-4 bg-gray-400 text-white rounded hover:bg-gray-500">Cancelar</a>
+            <button type="submit" class="py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700">Guardar</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function agregarPlato() {
+        const container = document.getElementById("platos-container");
+        const template = `
+            <div class="plato flex items-center space-x-4 mb-2">
+                <select name="id_plato[]" class="plato-select border border-gray-300 rounded-md shadow-sm" required>
+                    {% for plato in platos_preparables %}
+                    <option value="{{ plato['id_plato'] }}">
+                        {{ plato['nombre'] }} (Máx: {{ plato['cantidad_preparable'] }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <input type="number" name="cantidad[]" placeholder="Cantidad" class="cantidad border border-gray-300 rounded-md shadow-sm" required>
+                <button type="button" onclick="this.parentNode.remove()" class="bg-red-600 text-white px-3 py-1 rounded-md">Eliminar</button>
+            </div>
+        `;
+        container.insertAdjacentHTML("beforeend", template);
+    }
+</script>
+{% endblock %}

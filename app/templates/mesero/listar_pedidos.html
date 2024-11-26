@@ -4,95 +4,95 @@
 <div class="p-6 bg-white shadow-md rounded-lg">
     <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-bold text-gray-800">Gestión de Pedidos</h1>
+        {% if session['rol'] == 'Mesero' %}
         <a href="/mesero/pedidos/crear" class="py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700">
             Agregar Pedido
         </a>
+        {% endif %}
     </div>
 
+
+    <!-- Filtros -->
+    <form method="GET" action="" class="flex space-x-4 mb-4">
+        <!-- Filtro por Fecha -->
+        <div>
+            <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha</label>
+            <input type="date" name="fecha" id="fecha" value="{{ request.args.get('fecha', fecha_hoy) }}"
+                class="border border-gray-300 rounded-md px-3 py-2 w-full">
+
+        </div>
+
+        <!-- Filtro por Estado -->
+        <div>
+            <label for="estado" class="block text-sm font-medium text-gray-700">Estado</label>
+            <select name="estado" id="estado" class="border border-gray-300 rounded-md px-3 py-2 w-full">
+                <option value="">Todos</option>
+                <option value="pendiente" {% if request.args.get('estado')=='pendiente' %}selected{% endif %}>
+                    Pendiente
+                </option>
+                <option value="preparado" {% if request.args.get('estado')=='preparado' %}selected{% endif %}>
+                    Preparado
+                </option>
+                <option value="entregado" {% if request.args.get('estado')=='entregado' %}selected{% endif %}>
+                    Entregado
+                </option>
+                <option value="cancelado" {% if request.args.get('estado')=='cancelado' %}selected{% endif %}>
+                    Cancelado
+                </option>
+            </select>
+        </div>
+
+        <!-- Filtro por Mesa -->
+        <div>
+            <label for="mesa" class="block text-sm font-medium text-gray-700">Mesa</label>
+            <input type="text" name="mesa" id="mesa" value="{{ request.args.get('mesa', '') }}"
+                class="border border-gray-300 rounded-md px-3 py-2 w-full">
+        </div>
+
+        <!-- Botón Filtrar -->
+        <div class="flex items-end">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Filtrar</button>
+        </div>
+    </form>
+
+
+    <!-- Tabla de Pedidos -->
+    <table class="min-w-full border border-gray-300 bg-white shadow rounded-md">
+        <thead>
+            <tr class="bg-gray-100 text-center">
+                <th class="py-2 px-4 border-b">ID Pedido</th>
+                <th class="py-2 px-4 border-b">Mesa</th>
+                <th class="py-2 px-4 border-b">Estado</th>
+                <th class="py-2 px-4 border-b">Total</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pedido in pedidos %}
+            <tr class="hover:bg-gray-50 text-center">
+                <td class="py-2 px-4 border-b">{{ pedido.id_pedido }}</td>
+                <td class="py-2 px-4 border-b">{{ pedido.mesa }}</td>
+                <td class="py-2 px-4 border-b">{{ pedido.estado }}</td>
+                <td class="py-2 px-4 border-b">${{ "{:,.2f}".format(pedido.total) }}</td>
+                <td class="py-2 px-4 border-b flex justify-center space-x-2">
+                    <!-- Acciones -->
+                    <button class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                        onclick='mostrarDetalles({{ pedido|tojson|safe }})'>Ver Detalles</button>
+                    <button class="bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600"
+                        onclick="mostrarModalEstado({{ pedido.id_pedido }}, '{{ pedido.estado }}')">Cambiar
+                        Estado</button>
+                    {% if session['rol'] == 'Mesero' %}
+                    <button class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                        onclick="editarPedido({{ pedido.id_pedido }})">Editar</button>
+                    <button class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                        onclick="eliminarPedido({{ pedido.id_pedido }})">Eliminar</button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
-
-
-<!-- Filtros -->
-<form method="GET" action="" class="flex space-x-4 mb-4">
-    <!-- Filtro por Fecha -->
-    <div>
-        <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha</label>
-        <input type="date" name="fecha" id="fecha" value="{{ request.args.get('fecha', fecha_hoy) }}"
-            class="border border-gray-300 rounded-md px-3 py-2 w-full">
-
-    </div>
-
-    <!-- Filtro por Estado -->
-    <div>
-        <label for="estado" class="block text-sm font-medium text-gray-700">Estado</label>
-        <select name="estado" id="estado" class="border border-gray-300 rounded-md px-3 py-2 w-full">
-            <option value="">Todos</option>
-            <option value="pendiente" {% if request.args.get('estado')=='pendiente' %}selected{% endif %}>
-                Pendiente
-            </option>
-            <option value="preparado" {% if request.args.get('estado')=='preparado' %}selected{% endif %}>
-                Preparado
-            </option>
-            <option value="entregado" {% if request.args.get('estado')=='entregado' %}selected{% endif %}>
-                Entregado
-            </option>
-            <option value="cancelado" {% if request.args.get('estado')=='cancelado' %}selected{% endif %}>
-                Cancelado
-            </option>
-        </select>
-    </div>
-
-    <!-- Filtro por Mesa -->
-    <div>
-        <label for="mesa" class="block text-sm font-medium text-gray-700">Mesa</label>
-        <input type="text" name="mesa" id="mesa" value="{{ request.args.get('mesa', '') }}"
-            class="border border-gray-300 rounded-md px-3 py-2 w-full">
-    </div>
-
-    <!-- Botón Filtrar -->
-    <div class="flex items-end">
-        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Filtrar</button>
-    </div>
-</form>
-
-
-<!-- Tabla de Pedidos -->
-<table class="min-w-full border border-gray-300 bg-white shadow rounded-md">
-    <thead>
-        <tr class="bg-gray-100 text-center">
-            <th class="py-2 px-4 border-b">ID Pedido</th>
-            <th class="py-2 px-4 border-b">Mesa</th>
-            <th class="py-2 px-4 border-b">Estado</th>
-            <th class="py-2 px-4 border-b">Total</th>
-            <th class="py-2 px-4 border-b">Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for pedido in pedidos %}
-        <tr class="hover:bg-gray-50 text-center">
-            <td class="py-2 px-4 border-b">{{ pedido.id_pedido }}</td>
-            <td class="py-2 px-4 border-b">{{ pedido.mesa }}</td>
-            <td class="py-2 px-4 border-b">{{ pedido.estado }}</td>
-            <td class="py-2 px-4 border-b">${{ "{:,.2f}".format(pedido.total) }}</td>
-            <td class="py-2 px-4 border-b flex justify-center space-x-2">
-                <!-- Acciones -->
-                <button class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                    onclick='mostrarDetalles({{ pedido|tojson|safe }})'>Ver Detalles</button>
-                <button class="bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600"
-                    onclick="mostrarModalEstado({{ pedido.id_pedido }}, '{{ pedido.estado }}')">Cambiar
-                    Estado</button>
-                {% if session['rol'] == 'Mesero' %}
-                <button class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                    onclick="editarPedido({{ pedido.id_pedido }})">Editar</button>
-                <button class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                    onclick="eliminarPedido({{ pedido.id_pedido }})">Eliminar</button>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
 
 <!-- Modal para Detalles -->
 <div id="modal-detalles" data-id-pedido=""

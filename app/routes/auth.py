@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, flash, url_for, session
+from flask import Blueprint, render_template, redirect, flash, request, url_for, session
 from app.forms.auth_form import LoginForm
 from app.services.auth_service import AuthService
 from app.utils.token_utils import guardar_en_session
@@ -36,3 +36,16 @@ def logout():
     session.clear()  # Elimina todos los datos de la sesión
     flash("Has cerrado sesión correctamente.", "success")
     return redirect(url_for("auth.login"))
+
+@auth_bp.before_request
+def verificar_sesion():
+    """
+    Verifica si el usuario tiene una sesión activa antes de procesar cualquier solicitud.
+    Redirige al login si no está autenticado.
+    """
+    rutas_excluidas = ['auth.login']  # Excluir rutas específicas como 'login' y 'static'
+    
+    # Verificar si la ruta actual está excluida
+    if request.endpoint not in rutas_excluidas and 'username' not in session:
+        flash("Por favor, inicia sesión para continuar.", "error")
+        return redirect(url_for('auth.login'))

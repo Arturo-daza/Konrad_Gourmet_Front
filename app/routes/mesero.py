@@ -14,6 +14,7 @@ def listar_pedidos():
     
     # Obtener la fecha de hoy
     fecha_hoy = datetime.utcnow().strftime('%Y-%m-%d')
+    print(fecha_hoy)
     
     # Leer parámetros del request o usar valores predeterminados
     fecha = request.args.get("fecha", fecha_hoy)  # Fecha por defecto es "hoy"
@@ -88,39 +89,6 @@ def crear_pedido():
 
     return render_template("mesero/crear_pedido.html", platos_preparables=platos_preparables)
 
-
-
-@mesero_bp.route("/pedidos/<int:id_pedido>/editar", methods=["GET", "POST"])
-def editar_pedido(id_pedido):
-    """
-    Edita un pedido existente.
-    """
-    pedido = PedidoService.obtener_pedido(id_pedido)
-
-    if request.method == "POST":
-        data = {
-            "detalles": []
-        }
-
-        platos = request.form.getlist("id_plato[]")
-        cantidades = request.form.getlist("cantidad[]")
-
-        for i in range(len(platos)):
-            detalle = {
-                "id_plato": int(platos[i]),
-                "cantidad": int(cantidades[i])
-            }
-            data["detalles"].append(detalle)
-
-        try:
-            PedidoService.actualizar_pedido(id_pedido, data)
-            flash("Pedido actualizado exitosamente.", "success")
-            return redirect(url_for("mesero.listar_pedidos"))
-        except Exception as e:
-            flash(f"Error al actualizar el pedido: {str(e)}", "error")
-
-    return render_template("mesero/editar_pedido.html", pedido=pedido)
-
 @mesero_bp.route("/pedidos/<int:id_pedido>/eliminar", methods=["POST"])
 def eliminar_pedido(id_pedido):
     """
@@ -147,6 +115,56 @@ def actualizar_estado_pedido(id_pedido):
         flash(f"Error al actualizar el estado del pedido: {str(e)}", "error")
 
     return redirect(url_for("mesero.listar_pedidos"))
+
+@mesero_bp.route("/pedidos/<int:id_pedido>/editar", methods=["GET", "POST"])
+def editar_pedido(id_pedido):
+    """
+    Edita un pedido existente.
+    """
+    # Obtener los datos del pedido actual
+    pedido = PedidoService.obtener_pedido(id_pedido)
+    platos_preparables = PedidoService.obtener_platos_preparables()
+    if request.method == "POST":
+        data = {
+            "mesa": int(request.form["mesa"]),
+            "estado": pedido.get("estado", "pendiente"),
+            "detalles": []
+        }
+
+        platos = request.form.getlist("id_plato[]")
+        cantidades = request.form.getlist("cantidad[]")
+
+        for i in range(len(platos)):
+            id_plato = int(platos[i])
+            cantidad = int(cantidades[i])
+
+            # Validar que la cantidad no exceda el máximo preparable
+            max_preparable = next(
+                (p["cantidad_preparable"] for p in platos_preparables if p["id_plato"] == id_plato), 0
+            )
+            if cantidad > max_preparable:
+                flash(f"La cantidad para el plato {id_plato} excede el máximo preparable ({max_preparable}).", "error")
+                return render_template(
+                    "mesero/editar_pedido.html",
+                    pedido=pedido,
+                    platos_preparables=platos_preparables
+                )
+
+            data["detalles"].append({"id_plato": id_plato, "cantidad": cantidad})
+
+        try:
+            PedidoService.actualizar_pedido(id_pedido, data)
+            flash("Pedido actualizado exitosamente.", "success")
+            return redirect(url_for("mesero.listar_pedidos"))
+        except Exception as e:
+            flash(f"Error al actualizar el pedido: {str(e)}", "error")
+
+    return render_template(
+        "mesero/editar_pedido.html",
+        pedido=pedido,
+        platos_preparables=platos_preparables
+    )
+
 
 
 

@@ -28,12 +28,12 @@
 
                 {% if session['rol'] == 'Administrador' %}
                 <a href="/admin/users" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Usuarios</a>
-                <a href="/admin/settings" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Configuración</a>
-                <a href="/admin/reports" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Reportes</a>
+                <!-- <a href="/admin/settings" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Configuración</a> -->
+                <!-- <a href="/admin/reports" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Reportes</a> -->
                 {% elif session['rol'] == 'Jefe de Cocina' %}
                 <a href="/chef/platos" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Gestión de
                     Platos</a>
-                <a href="/chef/pedidos" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Pedidos</a>
+                <a href="/mesero/pedidos" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Pedidos</a>
                 {% elif session['rol'] == 'Mesero' %}
                 <a href="/mesero/pedidos" class="text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md">Mis Pedidos</a>
                 {% endif %}
