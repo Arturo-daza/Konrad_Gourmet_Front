@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="p-6 bg-green-100 shadow-md rounded-lg">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold text-green-800">Gestión de Inventario</h1>
+        <a href="/chef/inventario/crear" class="py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700">
+            Agregar Inventario
+        </a>
+    </div>
+    <table class="min-w-full border border-green-300 bg-white shadow rounded-md mt-4">
+        <thead>
+            <tr class="bg-green-200 text-center">
+                <th class="py-2 px-4 border-b border-green-300">Producto</th>
+                <th class="py-2 px-4 border-b border-green-300">Unidad</th>
+                <th class="py-2 px-4 border-b border-green-300">Precio Unitario</th>
+                <th class="py-2 px-4 border-b border-green-300">Cantidad Disponible</th>
+                <th class="py-2 px-4 border-b border-green-300">Costo Total</th>
+                <th class="py-2 px-4 border-b border-green-300">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in inventario %}
+            <tr class="{{ loop.cycle('bg-green-50', 'bg-white') }} hover:bg-green-100 text-center">
+                <td class="py-2 px-4 border-b border-green-300">{{ item.producto.nombre }}</td>
+                <td class="py-2 px-4 border-b border-green-300">{{ item.producto.unidad_medida }}</td>
+                <td class="py-2 px-4 border-b border-green-300">${{ "{:,.2f}".format(item.producto.precio) }}</td>
+                <td class="py-2 px-4 border-b border-green-300">{{ item.cantidad_disponible }}</td>
+                <td class="py-2 px-4 border-b border-green-300">${{ "{:,.2f}".format(item.costo_total) }}</td>
+                <td class="py-2 px-4 border-b border-green-300 flex justify-center space-x-2">
+                    <a href="/chef/inventario/{{ item.id_inventario }}/editar"
+                        class="bg-teal-500 text-white px-3 py-1 rounded hover:bg-teal-600">Editar</a>
+                    <button class="bg-teal-500 text-white px-3 py-1 rounded hover:bg-teal-600"
+                        onclick="abrirModalRecepcion({{ item.id_inventario }}, '{{ item.producto.nombre }}')">Recepcionar</button>
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Paginación -->
+    <div class="flex justify-center items-center mt-6 space-x-2">
+        {% if page > 1 %}
+        <a href="?page={{ page - 1 }}" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Anterior</a>
+        {% endif %}
+
+        {% for num in range(1, total_pages + 1) %}
+        <a href="?page={{ num }}"
+            class="px-4 py-2 {{ 'bg-green-600 text-white' if num == page else 'bg-gray-300 hover:bg-gray-400' }} rounded">
+            {{ num }}
+        </a>
+        {% endfor %}
+
+        {% if page < total_pages %} <a href="?page={{ page + 1 }}"
+            class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Siguiente</a>
+            {% endif %}
+    </div>
+
+    <div id="modal-recepcion" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center">
+        <div class="bg-white p-6 rounded shadow-lg w-1/3">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Recepcionar Unidades</h2>
+            <form id="form-recepcion" method="POST" action="">
+                <input type="hidden" name="id_inventario" id="id-inventario-recepcion">
+                <p class="mb-4">Producto: <span id="producto-nombre-recepcion" class="font-semibold"></span></p>
+                <label for="cantidad" class="block text-sm font-medium text-gray-700 mb-2">Cantidad a
+                    Recepcionar</label>
+                <input type="number" name="cantidad" id="cantidad-recepcion"
+                    class="border border-gray-300 rounded-md px-3 py-2 w-full" required>
+                <div class="flex justify-end mt-4 space-x-2">
+                    <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                        onclick="cerrarModalRecepcion()">Cancelar</button>
+                    <button type="submit"
+                        class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+    function eliminarInventario(idInventario) {
+        if (confirm("¿Estás seguro de eliminar este registro de inventario?")) {
+            fetch(`/chef/inventario/${idInventario}/eliminar`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer {{ session['access_token'] }}`
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert("Inventario eliminado exitosamente.");
+                        window.location.reload();
+                    } else {
+                        alert("Error al eliminar inventario.");
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+        }
+    }
+
+    function abrirModalRecepcion(idInventario, nombreProducto) {
+        // Asigna el ID del inventario al formulario
+        const form = document.getElementById("form-recepcion");
+        form.action = `/chef/inventario/${idInventario}/recepcionar`;
+
+        // Asigna el nombre del producto y muestra el modal
+        document.getElementById("producto-nombre-recepcion").textContent = nombreProducto;
+        document.getElementById("modal-recepcion").classList.remove("hidden");
+    }
+
+    function cerrarModalRecepcion() {
+        document.getElementById("modal-recepcion").classList.add("hidden");
+    }
+</script>
+{% endblock %}

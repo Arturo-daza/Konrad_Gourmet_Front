@@ -54,3 +54,12 @@ class ProductoService:
         response = requests.get(f"{api_url}/productos/{id_producto}", headers=headers)
         response.raise_for_status()
         return response.json()
+    
+    @staticmethod
+    def crear_producto(data):
+        token = session.get("access_token")
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        response = requests.post(f"{current_app.config['API_URL']}/productos/", json=data, headers=headers)
+        response.raise_for_status()
+        return response.json()
+

@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.services.categoria_service import CategoriaService
+from app.services.inventario_service import InventarioService
 from app.services.pedido_service import PedidoService
 from app.services.plato_service import PlatoService
 from app.services.producto_service import ProductoService
@@ -175,4 +176,109 @@ def actualizar_estado_pedido(id_pedido):
         flash(f"Error al actualizar el estado del pedido: {str(e)}", "error")
 
     return redirect(url_for("mesero.listar_pedidos"))
+
+@chef_bp.route("/inventario", methods=["GET"])
+def listar_inventario():
+    id_sucursal = 1  # Es la sucursal principal por defecto
+    inventario = InventarioService.obtener_inventario(id_sucursal)
+    page = request.args.get("page", default=1, type=int)
+    per_page = 10
+    total_items = len(inventario)  # Cantidad total de registros
+    total_pages = (total_items + per_page - 1) // per_page
+
+    inventario_paginado = inventario[(page - 1) * per_page: page * per_page]
+
+    return render_template(
+        "chef/listar_inventario.html",
+        inventario=inventario_paginado,
+        page=page,
+        total_pages=total_pages,
+    )
+
+
+@chef_bp.route("/inventario/crear", methods=["GET", "POST"])
+def crear_inventario():
+    """
+    Crea un nuevo registro de inventario junto con un producto asociado.
+    """
+    categorias = CategoriaService.obtener_categorias()
+    unidades = UnidadMedidaService.obtener_unidades()
+
+    if request.method == "POST":
+        # Crear el producto
+        producto_data = {
+            "nombre": request.form["nombre"],
+            "id_categoria": int(request.form["id_categoria"]),
+            "id_unidad_medida": int(request.form["id_unidad_medida"]),
+            "precio": float(request.form["precio"])
+        }
+
+        try:
+            producto = ProductoService.crear_producto(producto_data)
+        except Exception as e:
+            flash(f"Error al crear producto: {str(e)}", "error")
+            return render_template("chef/crear_inventario.html", categorias=categorias, unidades=unidades)
+
+        # Crear el inventario
+        inventario_data = {
+            "id_producto": producto["id_producto"],
+            "id_sucursal": 1,  # ID de la sucursal predeterminada
+            "cantidad_disponible": int(request.form["cantidad_disponible"]),
+            "cantidad_maxima": int(request.form["cantidad_maxima"])
+        }
+
+        try:
+            InventarioService.crear_inventario(inventario_data)
+            flash("Inventario creado exitosamente.", "success")
+            return redirect(url_for("chef.listar_inventario"))
+        except Exception as e:
+            flash(f"Error al crear inventario: {str(e)}", "error")
+
+    return render_template("chef/crear_inventario.html", categorias=categorias, unidades=unidades)
+
+@chef_bp.route("/inventario/<int:id_inventario>/editar", methods=["GET", "POST"])
+def editar_inventario(id_inventario):
+    """
+    Editar un inventario específico.
+    """
+    if request.method == "POST":
+        data = {
+            "cantidad_disponible": request.form["cantidad_disponible"],
+            "cantidad_maxima": request.form["cantidad_maxima"]
+        }
+        try:
+            InventarioService.actualizar_inventario(id_inventario,  request.form["cantidad_disponible"],  request.form["cantidad_maxima"])
+            flash("Inventario actualizado exitosamente.", "success")
+            return redirect(url_for("chef.listar_inventario"))
+        except Exception as e:
+            flash(f"Error al actualizar el inventario: {str(e)}", "error")
+
+    inventario = InventarioService.obtener_inventario_por_id(id_inventario)
+    return render_template("chef/editar_inventario.html", inventario=inventario)
+
+@chef_bp.route("/inventario/<int:id_inventario>/eliminar", methods=["POST"])
+def eliminar_inventario(id_inventario):
+    """
+    Elimina un registro de inventario.
+    """
+    try:
+        InventarioService.eliminar_inventario(id_inventario)
+        flash("Inventario eliminado exitosamente.", "success")
+    except Exception as e:
+        flash(f"Error al eliminar inventario: {str(e)}", "error")
+    return redirect(request.referrer or url_for("chef.listar_inventario"))
+
+@chef_bp.route("/inventario/<int:id_inventario>/recepcionar", methods=["POST"])
+def recepcionar_inventario(id_inventario):
+    """
+    Recepciona unidades al inventario.
+    """
+    cantidad = int(request.form["cantidad"])
+    try:
+        InventarioService.recepcionar_unidades(id_inventario, cantidad)
+        flash("Unidades recepcionadas exitosamente.", "success")
+    except Exception as e:
+        flash(f"Error al recepcionar unidades: {str(e)}", "error")
+    return redirect(url_for("chef.listar_inventario"))
+
 

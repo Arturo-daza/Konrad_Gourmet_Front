@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="p-6 bg-green-100 shadow-md rounded-lg max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold text-green-800 mb-6 text-center">Agregar Inventario</h1>
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Producto -->
+        <div>
+            <label for="nombre" class="block text-sm font-medium text-green-700">Nombre del Producto</label>
+            <input type="text" name="nombre" id="nombre" class="border border-green-300 rounded-md px-3 py-2 w-full focus:ring-green-500 focus:border-green-500" required>
+        </div>
+        <div>
+            <label for="id_categoria" class="block text-sm font-medium text-green-700">Categoría</label>
+            <select name="id_categoria" id="id_categoria" class="border border-green-300 rounded-md px-3 py-2 w-full focus:ring-green-500 focus:border-green-500" required>
+                {% for categoria in categorias %}
+                <option value="{{ categoria.id_categoria }}">{{ categoria.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="id_unidad_medida" class="block text-sm font-medium text-green-700">Unidad de Medida</label>
+            <select name="id_unidad_medida" id="id_unidad_medida" class="border border-green-300 rounded-md px-3 py-2 w-full focus:ring-green-500 focus:border-green-500" required>
+                {% for unidad in unidades %}
+                <option value="{{ unidad.id_unidad }}">{{ unidad.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="precio" class="block text-sm font-medium text-green-700">Precio</label>
+            <input type="number" name="precio" id="precio" step="0.01" class="border border-green-300 rounded-md px-3 py-2 w-full focus:ring-green-500 focus:border-green-500" required>
+        </div>
+        <!-- Inventario -->
+        <div>
+            <label for="cantidad_disponible" class="block text-sm font-medium text-green-700">Cantidad Disponible</label>
+            <input type="number" name="cantidad_disponible" id="cantidad_disponible" class="border border-green-300 rounded-md px-3 py-2 w-full focus:ring-green-500 focus:border-green-500" required>
+        </div>
+        <div>
+            <label for="cantidad_maxima" class="block text-sm font-medium text-green-700">Cantidad Máxima</label>
+            <input type="number" name="cantidad_maxima" id="cantidad_maxima" class="border border-green-300 rounded-md px-3 py-2 w-full focus:ring-green-500 focus:border-green-500" required>
+        </div>
+        <!-- Botón de guardar -->
+        <div class="md:col-span-2 text-center">
+            <button type="submit" class="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600 focus:ring-2 focus:ring-teal-500">
+                Guardar
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
