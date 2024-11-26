@@ -1,37 +1,38 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="p-6 bg-white shadow-md rounded-lg">
+<div class="p-6 bg-green-100 shadow-md rounded-lg">
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-bold text-gray-800 mb-4">Platos Registrados</h1>
-        <a href="/chef/platos/crear" class="py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-            Agregar Pedido
+        <h1 class="text-2xl font-bold text-green-800">Platos Registrados</h1>
+        <a href="/chef/platos/crear" class="py-2 px-4 bg-green-300 text-green-800 rounded hover:bg-green-400">
+            Agregar Plato
         </a>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for plato in platos %}
-        <div class="bg-gray-100 shadow-md rounded-lg p-4">
-            <h2 class="text-lg font-bold text-gray-800">{{ plato['nombre'] }}</h2>
-            <!-- <p class="text-sm text-gray-600 mb-2">{{ plato['descripcion'] }}</p> -->
-            <p class="text-sm text-gray-700 font-bold">Precio: ${{ plato['precio'] | round(2) }}</p>
+        <div class="bg-green-50 shadow-md rounded-lg p-4">
+            <h2 class="text-lg font-bold text-green-700">{{ plato['nombre'] }}</h2>
+            <p class="text-sm text-green-600 font-bold">
+                Precio: ${{ "{:,.2f}".format(plato['precio']) }}
+            </p>
 
             <div class="mt-4 flex justify-between">
                 <!-- Botón para abrir el modal de detalles -->
                 <button onclick="abrirModal('{{ plato['id_plato'] }}')"
-                    class="text-white bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">
+                    class="text-white bg-green-400 px-4 py-2 rounded hover:bg-green-500">
                     Ver Detalles
                 </button>
 
                 <!-- Botón para editar -->
                 <a href="/chef/platos/{{ plato['id_plato'] }}/editar"
-                    class="text-white bg-green-600 px-4 py-2 rounded hover:bg-green-700">
+                    class="text-white bg-green-500 px-4 py-2 rounded hover:bg-green-600">
                     Editar
                 </a>
 
                 <!-- Botón para eliminar -->
                 <button onclick="confirmarEliminar('{{ plato['id_plato'] }}')"
-                    class="text-white bg-red-600 px-4 py-2 rounded hover:bg-red-700">
+                    class="text-white bg-red-400 px-4 py-2 rounded hover:bg-red-500">
                     Eliminar
                 </button>
             </div>
@@ -41,11 +42,11 @@
 </div>
 
 <!-- Modal -->
-<div id="modalDetalles" class="fixed inset-0 hidden bg-gray-800 bg-opacity-50 flex justify-center items-center">
-    <div class="bg-white rounded-lg shadow-md w-3/4 max-w-2xl p-6">
+<div id="modalDetalles" class="fixed inset-0 hidden bg-green-900 bg-opacity-50 flex justify-center items-center">
+    <div class="bg-green-50 rounded-lg shadow-md w-3/4 max-w-2xl p-6">
         <div class="flex justify-between items-center mb-4">
-            <h2 id="modalTitulo" class="text-lg font-bold text-gray-800">Detalles del Plato</h2>
-            <button onclick="cerrarModal()" class="text-gray-500 hover:text-gray-800">
+            <h2 id="modalTitulo" class="text-lg font-bold text-green-800">Detalles del Plato</h2>
+            <button onclick="cerrarModal()" class="text-green-500 hover:text-green-800">
                 &times;
             </button>
         </div>
@@ -53,14 +54,14 @@
             <!-- Aquí se inyectará la información del plato -->
         </div>
         <div class="flex justify-between mt-4">
-            <button onclick="cerrarModal()" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">
+            <button onclick="cerrarModal()" class="bg-gray-300 text-green-800 px-4 py-2 rounded hover:bg-gray-400">
                 Cerrar
             </button>
             <div class="flex space-x-2">
                 <a id="modalEditar" href="#"
-                    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Editar</a>
+                    class="bg-green-400 text-green-900 px-4 py-2 rounded hover:bg-green-500">Editar</a>
                 <button id="modalEliminar" onclick=""
-                    class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Eliminar</button>
+                    class="bg-red-400 text-white px-4 py-2 rounded hover:bg-red-500">Eliminar</button>
             </div>
         </div>
     </div>
@@ -80,20 +81,25 @@
         // Título del modal
         modalTitulo.textContent = plato.nombre;
 
+        // Formatear precio
+        const formattedPrice = new Intl.NumberFormat("es-CO", {
+            style: "currency",
+            currency: "COP"
+        }).format(plato.precio);
+
         // Contenido del modal
         let ingredientesHTML = plato.ingredientes.map(ingrediente => `
-                <li>
+                <li >
                     Producto: <strong>${ingrediente.nombre_producto}</strong> (${ingrediente.nombre_categoria}),
                     Cantidad: ${ingrediente.cantidad} ${ingrediente.nombre_unidad}
                 </li>
             `).join("");
 
         modalContenido.innerHTML = `
-                <p><strong>Descripción:</strong> ${plato.descripcion || "Sin descripción"}</p>
-                <p><strong>Precio:</strong> $${plato.precio.toFixed(2)}</p>
-                <h3 class="font-bold mt-4">Ingredientes:</h3>
-                <ul class="list-disc pl-4">${ingredientesHTML}</ul>
-            `;
+    <p><strong>Precio:</strong> ${formattedPrice}</p>
+    <h3 class="font-bold mt-4 text-green-800">Ingredientes:</h3>
+    <ul class="list-disc pl-4 text-green-700">${ingredientesHTML}</ul>
+`;
 
         // Configurar botones de acción
         modalEditar.href = `/chef/platos/${id_plato}/editar`;
@@ -133,6 +139,5 @@
                 .catch(error => console.error("Error al eliminar el plato:", error));
         }
     }
-
 </script>
 {% endblock %}

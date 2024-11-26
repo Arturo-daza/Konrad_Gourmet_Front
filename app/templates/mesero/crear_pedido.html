@@ -2,28 +2,28 @@
 
 {% block content %}
 
-<div class="p-6 bg-white shadow-md rounded-lg">
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">Crear Pedido</h1>
+<div class="p-6 bg-green-100 shadow-md rounded-lg max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold text-green-800 mb-4">Crear Pedido</h1>
     <form method="POST">
         <!-- Mesa -->
         <div class="mb-4">
-            <label for="mesa" class="block text-sm font-medium text-gray-700">Mesa</label>
+            <label for="mesa" class="block text-sm font-medium text-green-700">Mesa</label>
             <input type="number" name="mesa" id="mesa"
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required min="1"
-                max="10">
+                class="mt-1 block w-full px-3 py-2 border border-green-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                required min="1" max="10">
         </div>
 
         <!-- Platos -->
         <div class="mb-4" id="platos-container">
-            <label class="block text-sm font-medium text-gray-700">Platos</label>
+            <label class="block text-sm font-medium text-green-700">Platos</label>
             <button type="button" onclick="agregarPlato()"
-                class="mt-2 mb-4 bg-indigo-600 text-white px-3 py-1 rounded-md">
+                class="mt-2 mb-4 bg-green-300 text-green-800 px-3 py-1 rounded-md hover:bg-green-400">
                 Agregar Plato
             </button>
 
             <!-- Plato plantilla -->
             <div class="plato flex items-center space-x-4 mb-2">
-                <select name="id_plato[]" class="plato-select border border-gray-300 rounded-md shadow-sm"
+                <select name="id_plato[]" class="plato-select border border-green-300 rounded-md shadow-sm"
                     onchange="validarCantidadMaxima(this)" required>
                     <option value="">Seleccionar Plato</option>
                     {% for plato in platos_preparables %}
@@ -33,9 +33,10 @@
                     {% endfor %}
                 </select>
                 <input type="number" name="cantidad[]"
-                    class="cantidad-input border border-gray-300 rounded-md shadow-sm" placeholder="Cantidad" required>
+                    class="cantidad-input border border-green-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                    placeholder="Cantidad" required>
                 <button type="button" onclick="this.parentNode.remove()"
-                    class="bg-red-600 text-white px-3 py-1 rounded-md">
+                    class="bg-green-100 text-green-800 px-3 py-1 rounded-md hover:bg-green-200">
                     Eliminar
                 </button>
             </div>
@@ -43,9 +44,10 @@
 
         <!-- Botones -->
         <div class="flex justify-end space-x-4">
-            <a href="/mesero/pedidos" class="py-2 px-4 bg-gray-400 text-white rounded hover:bg-gray-500">Cancelar</a>
+            <a href="/mesero/pedidos"
+                class="py-2 px-4 bg-gray-300 text-green-800 rounded hover:bg-gray-400">Cancelar</a>
             <button type="submit"
-                class="py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700">Guardar</button>
+                class="py-2 px-4 bg-green-400 text-green-900 rounded hover:bg-green-500">Guardar</button>
         </div>
     </form>
 </div>
@@ -57,7 +59,7 @@
             <div class="plato flex items-center space-x-4 mb-2">
                 <select
                     name="id_plato[]"
-                    class="plato-select border border-gray-300 rounded-md shadow-sm"
+                    class="plato-select border border-green-300 rounded-md shadow-sm"
                     onchange="validarCantidadMaxima(this)"
                     required
                 >
@@ -71,11 +73,11 @@
                 <input
                     type="number"
                     name="cantidad[]"
-                    class="cantidad-input border border-gray-300 rounded-md shadow-sm"
+                    class="cantidad-input border border-green-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
                     placeholder="Cantidad"
                     required
                 >
-                <button type="button" onclick="this.parentNode.remove()" class="bg-red-600 text-white px-3 py-1 rounded-md">
+                <button type="button" onclick="this.parentNode.remove()" class="bg-green-100 text-green-800 px-3 py-1 rounded-md hover:bg-green-200">
                     Eliminar
                 </button>
             </div>
