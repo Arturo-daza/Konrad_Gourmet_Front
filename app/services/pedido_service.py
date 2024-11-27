@@ -6,7 +6,7 @@ class PedidoService:
     def obtener_pedidos():
         token = session.get("access_token")
         headers = {"Authorization": f"Bearer {token}"}
-        response = requests.get(f"{current_app.config['API_URL']}/pedidos", headers=headers)
+        response = requests.get(f"{current_app.config['API_URL']}/pedidos/", headers=headers)
         response.raise_for_status()
         return response.json()
 

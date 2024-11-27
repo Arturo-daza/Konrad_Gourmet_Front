@@ -17,20 +17,38 @@ def listar_platos():
     categorias = CategoriaService.obtener_categorias()
     unidades = UnidadMedidaService.obtener_unidades()
 
+    # Crear diccionarios para acceso rápido a categorías y unidades
+    categorias_dict = {c["id_categoria"]: c for c in categorias}
+    unidades_dict = {u["id_unidad"]: u for u in unidades}
+
+    # Recopilar todos los IDs de productos necesarios
+    producto_ids = set()
+    for plato in platos:
+        for ingrediente in plato["ingredientes"]:
+            producto_ids.add(ingrediente["id_producto"])
+
+    # Obtener todos los productos en una sola llamada
+    productos = ProductoService.obtener_productos_list(list(producto_ids))
+    productos_dict = {p["id_producto"]: p for p in productos}
+
     # Enriquecer los ingredientes con nombres de productos, categorías y unidades
     for plato in platos:
         for ingrediente in plato["ingredientes"]:
-            producto = ProductoService.obtener_producto(ingrediente["id_producto"])
-            ingrediente["nombre_producto"] = producto["nombre"]
-            ingrediente["nombre_categoria"] = next(
-                (c["nombre"] for c in categorias if c["id_categoria"] == producto["id_categoria"]), "Desconocida"
-            )
-            ingrediente["nombre_unidad"] = next(
-                (u["nombre"] for u in unidades if u["id_unidad"] == ingrediente["id_unidad_medida"]), "Desconocida"
-            )
+            producto = productos_dict.get(ingrediente["id_producto"])
+            if producto:
+                ingrediente["nombre_producto"] = producto["nombre"]
+                ingrediente["nombre_categoria"] = categorias_dict.get(
+                    producto["id_categoria"], {"nombre": "Desconocida"}
+                )["nombre"]
+            else:
+                ingrediente["nombre_producto"] = "Desconocido"
+                ingrediente["nombre_categoria"] = "Desconocida"
+
+            ingrediente["nombre_unidad"] = unidades_dict.get(
+                ingrediente["id_unidad_medida"], {"nombre": "Desconocida"}
+            )["nombre"]
 
     return render_template("chef/platos.html", platos=platos)
-
 
 
 @chef_bp.route("/platos/crear", methods=["GET", "POST"])

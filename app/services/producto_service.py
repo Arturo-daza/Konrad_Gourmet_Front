@@ -27,6 +27,17 @@ class ProductoService:
         response = requests.get(f"{api_url}/productos/", headers=headers)
         response.raise_for_status()
         return response.json()
+    
+    def obtener_productos_list(ids_producto):
+        api_url = current_app.config["API_URL"]
+        headers = ProductoService.obtener_encabezados()
+        response = requests.post(f"{api_url}/productos/batch", json={"ids_producto": ids_producto}, headers=headers)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            # Manejo de errores según sea necesario
+            return []
 
     @staticmethod
     def obtener_productos_organizados():
